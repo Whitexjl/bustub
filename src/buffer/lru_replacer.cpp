@@ -22,7 +22,7 @@ LRUReplacer::~LRUReplacer() = default;
 
 // 淘汰
 bool LRUReplacer::Victim(frame_id_t *frame_id) { 
-    std::scoped_lock mtxLock(mtx);
+    std::scoped_lock mtxLock{mtx};
     if(lruList.size() == 0)
         return false; 
 
@@ -35,7 +35,7 @@ bool LRUReplacer::Victim(frame_id_t *frame_id) {
 
 // 删除
 void LRUReplacer::Pin(frame_id_t frame_id) {
-    std::scoped_lock mtxLock(mtx);
+    std::scoped_lock mtxLock{mtx};
     if(lruHashMap.count(frame_id) == 0)
         return ; 
 
@@ -46,7 +46,7 @@ void LRUReplacer::Pin(frame_id_t frame_id) {
 
 // 增加
 void LRUReplacer::Unpin(frame_id_t frame_id) {
-    std::scoped_lock mtxLock(mtx);
+    std::scoped_lock mtxLock{mtx};
     if (lruHashMap.count(frame_id) != 0) 
         return;
 

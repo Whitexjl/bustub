@@ -86,5 +86,11 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    * Flushes all the pages in the buffer pool to disk.
    */
   void FlushAllPgsImp() override;
+
+private:
+  vector<BufferPoolManagerInstance> vector_bfp; // 容器
+  size_t pool_size_;
+  size_t num_instances_;
+  size_t start_index_;
 };
 }  // namespace bustub
