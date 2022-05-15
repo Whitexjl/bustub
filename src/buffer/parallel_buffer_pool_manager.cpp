@@ -19,7 +19,7 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
   // Allocate and create individual BufferPoolManagerInstances
   start_index_ = 0;
   for(size_t i = 0; i < num_instances; i++) {
-    vector_bfp.push_back(new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager));
+    vector_bfp.push_back(*(new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager)));
   }
 }
 
