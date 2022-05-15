@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
+#include <vector>
 
 #include "buffer/buffer_pool_manager.h"
 #include "recovery/log_manager.h"
