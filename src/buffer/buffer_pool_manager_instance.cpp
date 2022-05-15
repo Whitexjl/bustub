@@ -55,7 +55,7 @@ bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
     return false;
   } else {
     frame_id_t frame_id_tmp = page_table_[page_id];
-    Page *page_tmp = pages_[frame_id_tmp];
+    Page *page_tmp = &pages_[frame_id_tmp];
 
     if(page_tmp->is_dirty_) {
       disk_manager_->WritePage(page_id, page_tmp->data_);
@@ -72,7 +72,7 @@ void BufferPoolManagerInstance::FlushAllPgsImp() {
   std::scoped_lock Lock(latch_);
   
   for(auto &p : page_table_) {
-    FlushPgImp(p->first);
+    FlushPgImp(p.first);
   }
 
 }
@@ -228,7 +228,7 @@ bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) {
     return false;
   } else { // 缓冲区存在
     frame_id_t frame_id_tmp = page_table_[page_id];
-    Page *page_tmp = pages_[frame_id_tmp];
+    Page *page_tmp = &pages_[frame_id_tmp];
     if(is_dirty) {
       page_tmp->is_dirty_ = true;
     }
