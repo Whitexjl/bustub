@@ -11,12 +11,12 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
-#include <vector>
 
 #include "buffer/buffer_pool_manager.h"
 #include "recovery/log_manager.h"
 #include "storage/disk/disk_manager.h"
 #include "storage/page/page.h"
+#include <vector>
 
 namespace bustub {
 
@@ -89,7 +89,7 @@ class ParallelBufferPoolManager : public BufferPoolManager {
   void FlushAllPgsImp() override;
 
 private:
-  vector<BufferPoolManagerInstance> vector_bfp; // 容器
+  std::vector<BufferPoolManagerInstance> vector_bfp; // 容器
   size_t pool_size_;
   size_t num_instances_;
   size_t start_index_;
