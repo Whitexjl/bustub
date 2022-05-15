@@ -19,7 +19,7 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
   // Allocate and create individual BufferPoolManagerInstances
   start_index_ = 0;
   for(size_t i = 0; i < num_instances; i++) {
-    vector_bfp.emplace_back(new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager));
+    vector_bfp.push_back(new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager));
   }
 }
 
@@ -62,12 +62,12 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
   Page *page = nullptr;
 
   do {
-    page = vector_bfp[index]->NewPgImp(page_id);
+    page = (vector_bfp[index]).NewPgImp(page_id);
     if(page != nullptr) {
       break;
     }
     index = (index + 1) % num_instances_;
-  } while(index != start_index_)
+  } while(index != start_index_);
 
   start_index_ = (start_index_ + 1) % num_instances_;
   return page;
@@ -81,7 +81,7 @@ bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
 void ParallelBufferPoolManager::FlushAllPgsImp() {
   // flush all pages from all BufferPoolManagerInstances
   for(auto &bfp : vector_bfp) {
-    bfp->FlushAllPgsImp();
+    bfp.FlushAllPgsImp();
   }
 
 }
