@@ -38,17 +38,17 @@ BufferPoolManager *ParallelBufferPoolManager::GetBufferPoolManager(page_id_t pag
 
 Page *ParallelBufferPoolManager::FetchPgImp(page_id_t page_id) {
   // Fetch page for page_id from responsible BufferPoolManagerInstance
-  return GetBufferPoolManager(page_id)->FetchPgImp(page_id);
+  return GetBufferPoolManager(page_id)->FetchPage(page_id);
 }
 
 bool ParallelBufferPoolManager::UnpinPgImp(page_id_t page_id, bool is_dirty) {
   // Unpin page_id from responsible BufferPoolManagerInstance
-  return GetBufferPoolManager(page_id)->UnpinPgImp(page_id, is_dirty);
+  return GetBufferPoolManager(page_id)->UnpinPage(page_id, is_dirty);
 }
 
 bool ParallelBufferPoolManager::FlushPgImp(page_id_t page_id) {
   // Flush page_id from responsible BufferPoolManagerInstance
-  return GetBufferPoolManager(page_id)->FlushPgImp(page_id);
+  return GetBufferPoolManager(page_id)->FlushPage(page_id);
 }
 
 Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
@@ -62,7 +62,7 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
   Page *page = nullptr;
 
   do {
-    page = (vector_bfp[index]).NewPgImp(page_id);
+    page = (vector_bfp[index]).NewPage(page_id);
     if(page != nullptr) {
       break;
     }
@@ -81,7 +81,7 @@ bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
 void ParallelBufferPoolManager::FlushAllPgsImp() {
   // flush all pages from all BufferPoolManagerInstances
   for(auto &bfp : vector_bfp) {
-    bfp.FlushAllPgsImp();
+    bfp.FlushAllPages();
   }
 
 }
