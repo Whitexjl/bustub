@@ -75,7 +75,7 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
 
 bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
   // Delete page_id from responsible BufferPoolManagerInstance
-  return GetBufferPoolManager(page_id)->DeletePgImp(page_id);
+  return GetBufferPoolManager(page_id)->DeletePage(page_id);
 }
 
 void ParallelBufferPoolManager::FlushAllPgsImp() {
