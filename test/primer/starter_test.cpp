@@ -36,7 +36,7 @@ static bool ThrowsBustubException(const std::function<void()> &function, Excepti
   return expected_type_thrown;
 }
 
-TEST(StarterTest, SampleTest) {
+TEST(StarterTest, DISABLED_SampleTest) {
   int a = 1;
   EXPECT_EQ(1, a);
 }
