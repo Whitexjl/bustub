@@ -15,15 +15,16 @@
 namespace bustub {
 
 ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
-                                                     LogManager *log_manager):vector_bfp{num_instances} {
+                                                     LogManager *log_manager):vector_bfp(num_instances) {
   // Allocate and create individual BufferPoolManagerInstances
   start_index_ = 0;
   pool_size_ = pool_size;
   num_instances_ = num_instances;
 
   for(uint32_t i = 0; i < num_instances; i++) {
-    BufferPoolManagerInstance *bpm = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
-    vector_bfp[i] = *bpm;
+    //BufferPoolManagerInstance *bpm = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
+    //vector_bfp.emplace_back(*bpm);
+    vector_bfp[i] = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
   }
 }
 
@@ -37,7 +38,7 @@ size_t ParallelBufferPoolManager::GetPoolSize() {
 
 BufferPoolManager *ParallelBufferPoolManager::GetBufferPoolManager(page_id_t page_id) {
   // Get BufferPoolManager responsible for handling given page id. You can use this method in your other methods.
-  return &vector_bfp[page_id % num_instances_];
+  return vector_bfp[page_id % num_instances_];
 }
 
 Page *ParallelBufferPoolManager::FetchPgImp(page_id_t page_id) {
@@ -66,7 +67,7 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
   Page *page = nullptr;
 
   do {
-    page = (vector_bfp[index]).NewPage(page_id);
+    page = (vector_bfp[index])->NewPage(page_id);
     if(page != nullptr) {
       break;
     }
@@ -85,7 +86,7 @@ bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
 void ParallelBufferPoolManager::FlushAllPgsImp() {
   // flush all pages from all BufferPoolManagerInstances
   for(auto &bfp : vector_bfp) {
-    bfp.FlushAllPages();
+    bfp->FlushAllPages();
   }
 
 }
