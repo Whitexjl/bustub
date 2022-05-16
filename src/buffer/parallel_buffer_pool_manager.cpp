@@ -15,15 +15,15 @@
 namespace bustub {
 
 ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
-                                                     LogManager *log_manager) {
+                                                     LogManager *log_manager):vector_bfp{num_instances} {
   // Allocate and create individual BufferPoolManagerInstances
   start_index_ = 0;
   pool_size_ = pool_size;
   num_instances_ = num_instances;
 
-  for(size_t i = 0; i < num_instances; i++) {
+  for(uint32_t i = 0; i < num_instances; i++) {
     BufferPoolManagerInstance *bpm = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
-    vector_bfp.push_back(*bpm);
+    vector_bfp[i] = *bpm;
   }
 }
 
