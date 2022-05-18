@@ -94,5 +94,6 @@ private:
   size_t pool_size_;
   size_t num_instances_;
   size_t start_index_;
+  std::mutex latch_;
 };
 }  // namespace bustub
