@@ -161,6 +161,10 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
       }
     }
 
+    if(frame_id_tmp == -1) {
+      return nullptr;
+    }
+
     Page *page_tmp = &pages_[frame_id_tmp];
     // 是脏页，需要先写回磁盘
     if(page_tmp->IsDirty()) { 
@@ -177,7 +181,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     page_tmp->ResetMemory(); // 擦除换出页
     page_tmp->page_id_ = page_id; // 页号更新
     page_tmp->pin_count_ = 1; // 
-    disk_manager_->ReadPage(page_id, page_tmp->data_); // 把磁盘page_id的内容读取到被换出的缓冲区frame
+    disk_manager_->ReadPage(page_tmp->page_id_, page_tmp->data_); // 把磁盘page_id的内容读取到被换出的缓冲区frame
 
     replacer_->Pin(frame_id_tmp);
     
