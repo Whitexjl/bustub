@@ -57,7 +57,7 @@ bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
     frame_id_t frame_id_tmp = page_table_[page_id];
     Page *page_tmp = &pages_[frame_id_tmp];
 
-    if(page_tmp->is_dirty_) {
+    if(page_tmp->IsDirty()) {
       disk_manager_->WritePage(page_id, page_tmp->data_);
       page_tmp->is_dirty_ = false;
     }
@@ -104,7 +104,7 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
   Page *page_tmp = &pages_[frame_id_tmp];
   
   // 脏页回写磁盘
-  if(page_tmp->is_dirty_) {
+  if(page_tmp->IsDirty()) {
     disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
     page_tmp->is_dirty_ = false;
   }
@@ -163,7 +163,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
 
     Page *page_tmp = &pages_[frame_id_tmp];
     // 是脏页，需要先写回磁盘
-    if(page_tmp->is_dirty_) { 
+    if(page_tmp->IsDirty()) { 
       disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
       page_tmp->is_dirty_ = false;
     }  
@@ -200,7 +200,7 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
     Page *page_tmp = &pages_[frame_id_tmp];
     // 当前已经没有线程在占用此缓冲区页
     if(page_tmp->pin_count_ <= 0) {
-      if(page_tmp->is_dirty_) {
+      if(page_tmp->IsDirty()) {
         disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
         page_tmp->is_dirty_ = false;
       } 
