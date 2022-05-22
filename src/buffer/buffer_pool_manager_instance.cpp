@@ -162,7 +162,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     /*if(frame_id_tmp == -1) {
       return nullptr;
     }*/
-
+    assert(frame_id_tmp != -1);
     assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
     Page *page_tmp = &pages_[frame_id_tmp];
     // 是脏页，需要先写回磁盘
