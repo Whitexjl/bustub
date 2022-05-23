@@ -31,7 +31,7 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
 
 // Update constructor to destruct all BufferPoolManagerInstances and deallocate any associated memory
 ParallelBufferPoolManager::~ParallelBufferPoolManager() {
-  for(auto &vb : vector_bfp) {
+  for (auto &vb : vector_bfp) {
     delete vb;
   }
 }
@@ -74,11 +74,11 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
 
   do {
     page = (vector_bfp[index])->NewPage(page_id);
-    if(page != nullptr) {
+    if  (page != nullptr) {
       break;
     }
     index = (index + 1) % num_instances_;
-  } while(index != start_index_);
+  } while (index != start_index_);
 
   start_index_ = (start_index_ + 1) % num_instances_;
   return page;
@@ -91,10 +91,9 @@ bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
 
 void ParallelBufferPoolManager::FlushAllPgsImp() {
   // flush all pages from all BufferPoolManagerInstances
-  for(auto &bfp : vector_bfp) {
+  for (auto &bfp : vector_bfp) {
     bfp->FlushAllPages();
   }
-
 }
 
 }  // namespace bustub
