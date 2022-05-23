@@ -93,14 +93,12 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
     frame_id_tmp = free_list_.front();
     free_list_.pop_front();
   } else {  // 缓冲区满了，lru淘汰
-    if (!replacer_->Victim(&frame_id_tmp)) {  //lru不能找到替换
+    if (!replacer_->Victim(&frame_id_tmp)) {  // lru不能找到替换
       return nullptr;
     }
-  }
-  
+  }  
   assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
   Page *page_tmp = &pages_[frame_id_tmp];
-  
   // 脏页回写磁盘
   if (page_tmp->IsDirty()) {
     disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
@@ -132,19 +130,15 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
   std::scoped_lock Lock{latch_};
- 
   assert(page_id >= 0);
-
   // page在页表中存在，说明page在缓冲区
   if (page_table_.count(page_id) != 0) {
     frame_id_t frame_id_tmp = page_table_[page_id];
     
     Page *page_tmp = &pages_[frame_id_tmp];
     page_tmp->pin_count_++;
-
     replacer_->Pin(frame_id_tmp);
     return page_tmp;
-
   } else {
     frame_id_t frame_id_tmp = -1;
     // 先看free_list中是否非空
@@ -161,11 +155,10 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
     Page *page_tmp = &pages_[frame_id_tmp];
     // 是脏页，需要先写回磁盘
-    if (page_tmp->IsDirty()) { 
+    if (page_tmp->IsDirty()) {
       disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
-      //page_tmp->pin_count_ = 0;
+      // page_tmp->pin_count_ = 0;
     }  
-
     // 更新页表
     page_table_.erase(page_tmp->page_id_);
     page_table_.emplace(page_id, frame_id_tmp);
@@ -176,9 +169,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     page_tmp->pin_count_++;  
     page_tmp->ResetMemory();  // 擦除换出页数据
     disk_manager_->ReadPage(page_tmp->page_id_, page_tmp->data_);  // 把磁盘page_id的内容读取到被换出的缓冲区frame
-
     replacer_->Pin(frame_id_tmp);
-    
     return page_tmp;
   }
 }
@@ -203,15 +194,13 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
       if (page_tmp->IsDirty()) {
         disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
         page_tmp->is_dirty_ = false;
-      } 
-
+      }
       page_tmp->pin_count_ = 0;
       page_tmp->page_id_ = INVALID_PAGE_ID;
       page_tmp->ResetMemory();  // 擦除换出页数据
       replacer_->Pin(page_id);
       page_table_.erase(page_id);
       free_list_.push_back(frame_id_tmp);
-
       return true;
     } else {
       return false;
@@ -222,7 +211,6 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
 
 bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) { 
   std::scoped_lock Lock{latch_};
-  
   // 缓冲区不存在此页
   if (page_table_.count(page_id) == 0) {
     return false;
@@ -232,16 +220,13 @@ bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) {
     if (is_dirty) {
       page_tmp->is_dirty_ = true;
     }
-
     if (page_tmp->pin_count_ == 0) {
       return false;
     }
-
     page_tmp->pin_count_--;
     if (page_tmp->pin_count_ == 0) {
       replacer_->Unpin(frame_id_tmp);
     }
-
     return true;
   }
 }
