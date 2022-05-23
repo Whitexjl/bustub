@@ -152,11 +152,17 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     if(!free_list_.empty()) { // 非空说明缓冲区未满,直接free_list中取出
       frame_id_tmp = free_list_.front();
       free_list_.pop_front();
+      
+      std::cout << frame_id_tmp << std::endl;
+      assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
     } else { // 如果为空，则说明缓冲区已满，需要调用lru换出
       // 得到被淘汰的那个frame_id
       if(!replacer_->Victim(&frame_id_tmp)) { // 没有找到替换页？？？缓冲区满，lru空？这是啥情况
         return nullptr;
       }
+      
+      std::cout << frame_id_tmp << std::endl;
+      assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
     }
 
     /*if(frame_id_tmp == -1) {
