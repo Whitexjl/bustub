@@ -117,7 +117,7 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
   page_tmp->page_id_ = new_page_id;
   page_tmp->ResetMemory();
   // 要不要读磁盘内容到缓冲区？还有说要写入磁盘的
-  //disk_manager_->ReadPage(new_page_id, page_tmp->data_);
+  disk_manager_->ReadPage(new_page_id, page_tmp->data_);
   replacer_->Pin(frame_id_tmp);
   *page_id = new_page_id;
 
