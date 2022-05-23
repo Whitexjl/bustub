@@ -29,7 +29,11 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
 }
 
 // Update constructor to destruct all BufferPoolManagerInstances and deallocate any associated memory
-ParallelBufferPoolManager::~ParallelBufferPoolManager() = default;
+ParallelBufferPoolManager::~ParallelBufferPoolManager() {
+  for(auto &vb : vector_bfp) {
+    delete vb;
+  }
+}
 
 size_t ParallelBufferPoolManager::GetPoolSize() {
   // Get size of all BufferPoolManagerInstances
@@ -63,7 +67,7 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
   // starting index and return nullptr
   // 2.   Bump the starting index (mod number of instances) to start search at a different BPMI each time this function
   // is called
-  std::scoped_lock Lock(latch_);
+  std::scoped_lock Lock{latch_};
   size_t index = start_index_;
   Page *page = nullptr;
 
