@@ -96,7 +96,7 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
     if (!replacer_->Victim(&frame_id_tmp)) {  // lru不能找到替换
       return nullptr;
     }
-  }  
+  }
   assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
   Page *page_tmp = &pages_[frame_id_tmp];
   // 脏页回写磁盘
@@ -134,7 +134,6 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
   // page在页表中存在，说明page在缓冲区
   if (page_table_.count(page_id) != 0) {
     frame_id_t frame_id_tmp = page_table_[page_id];
-    
     Page *page_tmp = &pages_[frame_id_tmp];
     page_tmp->pin_count_++;
     replacer_->Pin(frame_id_tmp);
@@ -158,7 +157,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     if (page_tmp->IsDirty()) {
       disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
       // page_tmp->pin_count_ = 0;
-    }  
+    }
     // 更新页表
     page_table_.erase(page_tmp->page_id_);
     page_table_.emplace(page_id, frame_id_tmp);
@@ -166,7 +165,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     // 更新缓冲区frame页信息
     page_tmp->is_dirty_ = false;
     page_tmp->page_id_ = page_id;  // 页号更新
-    page_tmp->pin_count_++;  
+    page_tmp->pin_count_++;
     page_tmp->ResetMemory();  // 擦除换出页数据
     disk_manager_->ReadPage(page_tmp->page_id_, page_tmp->data_);  // 把磁盘page_id的内容读取到被换出的缓冲区frame
     replacer_->Pin(frame_id_tmp);
@@ -206,10 +205,9 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
       return false;
     }
   }
-
 }
 
-bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) { 
+bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) {
   std::scoped_lock Lock{latch_};
   // 缓冲区不存在此页
   if (page_table_.count(page_id) == 0) {

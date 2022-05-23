@@ -22,9 +22,7 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
   num_instances_ = num_instances;
 
   // 建议容器里面放置指针，而不是具体的类实例，避免在push_back等操作过程中调用发生的拷贝
-  for(uint32_t i = 0; i < num_instances; i++) {
-    //BufferPoolManagerInstance *bpm = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
-    //vector_bfp.emplace_back(bpm);
+  for (uint32_t i = 0; i < num_instances; i++) {
     vector_bfp[i] = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
   }
 }

@@ -21,10 +21,10 @@ LRUReplacer::LRUReplacer(size_t num_pages) {
 LRUReplacer::~LRUReplacer() = default;
 
 // 淘汰
-bool LRUReplacer::Victim(frame_id_t *frame_id) { 
+bool LRUReplacer::Victim(frame_id_t *frame_id) {
     std::scoped_lock mtxLock{mtx};
     if (lruList.size() == 0) {
-        return false; 
+        return false;
     }
 
     *frame_id = lruList.back();
@@ -38,10 +38,8 @@ bool LRUReplacer::Victim(frame_id_t *frame_id) {
 void LRUReplacer::Pin(frame_id_t frame_id) {
     std::scoped_lock mtxLock{mtx};
     if (lruHashMap.count(frame_id) == 0) {
-        return;         
+        return;
     }
-
-
     auto frame_id_itr = lruHashMap[frame_id];
     lruList.erase(frame_id_itr);
     lruHashMap.erase(frame_id);
@@ -51,13 +49,11 @@ void LRUReplacer::Pin(frame_id_t frame_id) {
 void LRUReplacer::Unpin(frame_id_t frame_id) {
     std::scoped_lock mtxLock{mtx};
     if (lruHashMap.count(frame_id) != 0) {
-        return;        
+        return;
     }
-
     if (lruList.size() == lruListMaxSize) {
-        return ;         
+        return;
     }
-
     lruList.push_front(frame_id);
     lruHashMap.emplace(frame_id, lruList.begin());
 }
