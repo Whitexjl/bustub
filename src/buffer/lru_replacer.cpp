@@ -15,7 +15,7 @@
 namespace bustub {
 
 LRUReplacer::LRUReplacer(size_t num_pages) {
-    lruListMaxSize = num_pages;
+    lru_list_max_size_ = num_pages;
 }
 
 LRUReplacer::~LRUReplacer() = default;
@@ -23,13 +23,13 @@ LRUReplacer::~LRUReplacer() = default;
 // 淘汰
 bool LRUReplacer::Victim(frame_id_t *frame_id) {
     std::scoped_lock mtxLock{mtx};
-    if (lruList.size() == 0) {
+    if (lru_list_.size() == 0) {
         return false;
     }
 
-    *frame_id = lruList.back();
-    lruHashMap.erase(*frame_id);
-    lruList.pop_back();
+    *frame_id = lru_list_.back();
+    lru_hash_map_.erase(*frame_id);
+    lru_list_.pop_back();
 
     return true;
 }
@@ -37,27 +37,27 @@ bool LRUReplacer::Victim(frame_id_t *frame_id) {
 // 删除
 void LRUReplacer::Pin(frame_id_t frame_id) {
     std::scoped_lock mtxLock{mtx};
-    if (lruHashMap.count(frame_id) == 0) {
+    if (lru_hash_map_.count(frame_id) == 0) {
         return;
     }
-    auto frame_id_itr = lruHashMap[frame_id];
-    lruList.erase(frame_id_itr);
-    lruHashMap.erase(frame_id);
+    auto frame_id_itr = lru_hash_map_[frame_id];
+    lru_list_.erase(frame_id_itr);
+    lru_hash_map_.erase(frame_id);
 }
 
 // 增加
 void LRUReplacer::Unpin(frame_id_t frame_id) {
     std::scoped_lock mtxLock{mtx};
-    if (lruHashMap.count(frame_id) != 0) {
+    if (lru_hash_map_.count(frame_id) != 0) {
         return;
     }
-    if (lruList.size() == lruListMaxSize) {
+    if (lru_list_.size() == lru_list_max_size_) {
         return;
     }
-    lruList.push_front(frame_id);
-    lruHashMap.emplace(frame_id, lruList.begin());
+    lru_list_.push_front(frame_id);
+    lru_hash_map_.emplace(frame_id, lru_list_.begin());
 }
 
-size_t LRUReplacer::Size() { return lruList.size(); }
+size_t LRUReplacer::Size() { return lru_list_.size(); }
 
 }  // namespace bustub

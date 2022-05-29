@@ -15,7 +15,7 @@
 namespace bustub {
 
 ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
-                                                     LogManager *log_manager):vector_bfp(num_instances) {
+                                                     LogManager *log_manager):vector_bfp_(num_instances) {
   // Allocate and create individual BufferPoolManagerInstances
   start_index_ = 0;
   pool_size_ = pool_size;
@@ -23,13 +23,13 @@ ParallelBufferPoolManager::ParallelBufferPoolManager(size_t num_instances, size_
 
   // 建议容器里面放置指针，而不是具体的类实例，避免在push_back等操作过程中调用发生的拷贝
   for (uint32_t i = 0; i < num_instances; i++) {
-    vector_bfp[i] = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
+    vector_bfp_[i] = new BufferPoolManagerInstance(pool_size, num_instances, i, disk_manager, log_manager);
   }
 }
 
 // Update constructor to destruct all BufferPoolManagerInstances and deallocate any associated memory
 ParallelBufferPoolManager::~ParallelBufferPoolManager() {
-  for (auto &vb : vector_bfp) {
+  for (auto &vb : vector_bfp_) {
     delete vb;
   }
 }
@@ -41,7 +41,7 @@ size_t ParallelBufferPoolManager::GetPoolSize() {
 
 BufferPoolManager *ParallelBufferPoolManager::GetBufferPoolManager(page_id_t page_id) {
   // Get BufferPoolManager responsible for handling given page id. You can use this method in your other methods.
-  return vector_bfp[page_id % num_instances_];
+  return vector_bfp_[page_id % num_instances_];
 }
 
 Page *ParallelBufferPoolManager::FetchPgImp(page_id_t page_id) {
@@ -71,7 +71,7 @@ Page *ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) {
   Page *page = nullptr;
 
   do {
-    page = (vector_bfp[index])->NewPage(page_id);
+    page = (vector_bfp_[index])->NewPage(page_id);
     if  (page != nullptr) {
       break;
     }
@@ -89,7 +89,7 @@ bool ParallelBufferPoolManager::DeletePgImp(page_id_t page_id) {
 
 void ParallelBufferPoolManager::FlushAllPgsImp() {
   // flush all pages from all BufferPoolManagerInstances
-  for (auto &bfp : vector_bfp) {
+  for (auto &bfp : vector_bfp_) {
     bfp->FlushAllPages();
   }
 }

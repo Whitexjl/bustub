@@ -48,10 +48,10 @@ class LRUReplacer : public Replacer {
 
  private:
   // TODO(student): implement me!
-  std::mutex mtx;
-  std::list<frame_id_t> lruList;
-  std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> lruHashMap;
-  size_t lruListMaxSize;
+  std::mutex mtx_;
+  std::list<frame_id_t> lru_list_;
+  std::unordered_map<frame_id_t, std::list<frame_id_t>::iterator> lru_hash_map_;
+  size_t lru_list_max_size_;
 };
 
 }  // namespace bustub
