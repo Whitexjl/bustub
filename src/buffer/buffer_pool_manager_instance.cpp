@@ -49,7 +49,7 @@ BufferPoolManagerInstance::~BufferPoolManagerInstance() {
 
 bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
   // Make sure you call DiskManager::WritePage!
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
 
   if (page_table_.count(page_id) == 0 || page_id == INVALID_PAGE_ID) {
     return false;
@@ -68,7 +68,7 @@ bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
 
 void BufferPoolManagerInstance::FlushAllPgsImp() {
   // You can do it!
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
 
   for (auto p : page_table_) {
     FlushPgImp(p.first);
@@ -82,7 +82,7 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
   // 2.   Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
 
   // 新申请的页
   page_id_t new_page_id = AllocatePage();
@@ -129,15 +129,15 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
   // 2.     If R is dirty, write it back to the disk.
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
   assert(page_id >= 0);
+  Page *page_tmp;
   // page在页表中存在，说明page在缓冲区
   if (page_table_.count(page_id) != 0) {
     frame_id_t frame_id_tmp = page_table_[page_id];
-    Page *page_tmp = &pages_[frame_id_tmp];
+    page_tmp = &pages_[frame_id_tmp];
     page_tmp->pin_count_++;
     replacer_->Pin(frame_id_tmp);
-    return page_tmp;
   } else {
     frame_id_t frame_id_tmp = -1;
     // 先看free_list中是否非空
@@ -152,7 +152,7 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     }
 
     assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
-    Page *page_tmp = &pages_[frame_id_tmp];
+    page_tmp = &pages_[frame_id_tmp];
     // 是脏页，需要先写回磁盘
     if (page_tmp->IsDirty()) {
       disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
@@ -169,8 +169,8 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     page_tmp->ResetMemory();  // 擦除换出页数据
     disk_manager_->ReadPage(page_tmp->page_id_, page_tmp->data_);  // 把磁盘page_id的内容读取到被换出的缓冲区frame
     replacer_->Pin(frame_id_tmp);
-    return page_tmp;
   }
+  return page_tmp;
 }
 
 bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
@@ -179,54 +179,54 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
   // 1.   If P does not exist, return true.
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
   assert(page_id >= 0);
   DeallocatePage(page_id);
   // 页表中是否存在，也即是否在缓冲区里面
   if (page_table_.count(page_id) == 0) {
     return true;
-  } else {  // 说明在缓冲区里面
-    frame_id_t frame_id_tmp = page_table_[page_id];
-    Page *page_tmp = &pages_[frame_id_tmp];
-    // 当前已经没有线程在占用此缓冲区页
-    if (page_tmp->pin_count_ <= 0) {
-      if (page_tmp->IsDirty()) {
-        disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
-        page_tmp->is_dirty_ = false;
-      }
-      page_tmp->pin_count_ = 0;
-      page_tmp->page_id_ = INVALID_PAGE_ID;
-      page_tmp->ResetMemory();  // 擦除换出页数据
-      replacer_->Pin(page_id);
-      page_table_.erase(page_id);
-      free_list_.push_back(frame_id_tmp);
-      return true;
-    } else {
-      return false;
-    }
+  } 
+  // 说明在缓冲区里面
+  frame_id_t frame_id_tmp = page_table_[page_id];
+  Page *page_tmp = &pages_[frame_id_tmp];
+  // 当前已经没有线程在占用此缓冲区页
+  if (page_tmp->pin_count_ > 0) {
+    return false;
   }
+
+  if (page_tmp->IsDirty()) {
+    disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
+    page_tmp->is_dirty_ = false;
+  }
+  page_tmp->pin_count_ = 0;
+  page_tmp->page_id_ = INVALID_PAGE_ID;
+  page_tmp->ResetMemory();  // 擦除换出页数据
+  replacer_->Pin(page_id);
+  page_table_.erase(page_id);
+  free_list_.push_back(frame_id_tmp);
+  return true;
 }
 
 bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) {
-  std::scoped_lock Lock{latch_};
+  std::scoped_lock lock{latch_};
   // 缓冲区不存在此页
   if (page_table_.count(page_id) == 0) {
     return false;
-  } else {  // 缓冲区存在
-    frame_id_t frame_id_tmp = page_table_[page_id];
-    Page *page_tmp = &pages_[frame_id_tmp];
-    if (is_dirty) {
-      page_tmp->is_dirty_ = true;
-    }
-    if (page_tmp->pin_count_ == 0) {
-      return false;
-    }
-    page_tmp->pin_count_--;
-    if (page_tmp->pin_count_ == 0) {
-      replacer_->Unpin(frame_id_tmp);
-    }
-    return true;
   }
+  // 缓冲区存在
+  frame_id_t frame_id_tmp = page_table_[page_id];
+  Page *page_tmp = &pages_[frame_id_tmp];
+  if (is_dirty) {
+    page_tmp->is_dirty_ = true;
+  }
+  if (page_tmp->pin_count_ == 0) {
+    return false;
+  }
+  page_tmp->pin_count_--;
+  if (page_tmp->pin_count_ == 0) {
+    replacer_->Unpin(frame_id_tmp);
+  }
+  return true;
 }
 
 page_id_t BufferPoolManagerInstance::AllocatePage() {
