@@ -84,9 +84,6 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
   // 4.   Set the page ID output parameter. Return a pointer to P.
   std::scoped_lock lock{latch_};
 
-  // 新申请的页
-  page_id_t new_page_id = AllocatePage();
-
   frame_id_t frame_id_tmp = -1;
   // 缓冲区未满
   if (!free_list_.empty()) {
@@ -97,6 +94,10 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
       return nullptr;
     }
   }
+
+  // 新申请的页
+  page_id_t new_page_id = AllocatePage();
+  
   assert(frame_id_tmp >= 0 && frame_id_tmp < static_cast<int>(pool_size_));
   Page *page_tmp = &pages_[frame_id_tmp];
   // 脏页回写磁盘
