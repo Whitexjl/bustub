@@ -21,7 +21,7 @@
 #include "storage/page/hash_table_page_defs.h"
 
 namespace bustub {
-
+#define MAX_BUCKET_DEPTH 9
 /**
  *
  * Directory Page for extendible hash table.
