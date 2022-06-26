@@ -48,7 +48,7 @@ uint32_t HashTableDirectoryPage::Size() { return (1 << global_depth_);}
 
 bool HashTableDirectoryPage::CanShrink() { 
   // 整个Directory能不能收缩取决于每个localdepth是否都比globaldepth小
-  int org_num = Size();
+  uint32_t org_num = Size();
   for(uint32_t i = 0; i < org_num; i++) {
     if(local_depths_[i] == global_depth_) {
       return false;
