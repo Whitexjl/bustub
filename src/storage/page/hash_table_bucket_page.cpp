@@ -192,7 +192,7 @@ template <typename KeyType, typename ValueType, typename KeyComparator>
 void HASH_TABLE_BUCKET_TYPE::Reset() {
   memset(occupied_, 0, sizeof(occupied_));
   memset(readable_, 0, sizeof(readable_));
-  memset(array_, 0, sizeof(array_));
+  memset(array_, 0, sizeof(array_) / sizeof(MappingType));
 }
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
