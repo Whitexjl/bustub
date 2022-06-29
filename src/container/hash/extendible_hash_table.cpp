@@ -132,7 +132,7 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   // 如果bucket没满，直接插入即可
   if(!bucket->IsFull()) {
     bool ret = bucket->Insert(key, value, comparator_);
-    bucket_page->WUnlatch();
+    //bucket_page->WUnlatch();
     assert(buffer_pool_manager_->UnpinPage(bucket_page_id, true));
     assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
     table_latch_.RUnlock();
@@ -144,7 +144,7 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   assert(buffer_pool_manager_->UnpinPage(bucket_page_id, false));
   assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
 
-  table_latch_..RUnlock();
+  table_latch_.RUnlock();
   return SplitInsert(transaction, key, value);
 }
 
