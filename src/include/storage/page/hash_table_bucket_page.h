@@ -132,6 +132,10 @@ class HashTableBucketPage {
    */
   bool IsEmpty();
 
+  MappingType *GetArrayCopy();
+
+  void Reset();
+
   /**
    * Prints the bucket's occupancy information
    */

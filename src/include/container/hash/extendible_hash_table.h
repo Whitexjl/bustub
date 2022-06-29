@@ -161,6 +161,9 @@ class ExtendibleHashTable {
    */
   void Merge(Transaction *transaction, const KeyType &key, const ValueType &value);
 
+  // 创建Directory的锁
+  std::mutex directory_lock_;
+
   // member variables
   page_id_t directory_page_id_;
   BufferPoolManager *buffer_pool_manager_;
