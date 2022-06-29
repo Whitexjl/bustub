@@ -71,12 +71,12 @@ HashTableDirectoryPage *HASH_TABLE_TYPE::FetchDirectoryPage() {
     // 然后创建为空的directory创建第一个bucket
     page_id_t new_page_id_buc;
     page = nullptr;
-    Page *page = buffer_pool_manager_->NewPage(&new_page_id_buc);
+    page = buffer_pool_manager_->NewPage(&new_page_id_buc);
     assert(page != nullptr);
     ret->SetBucketPageId(0, new_page_id_buc);
     // 最后Unpin这两个页面??????
-    assert(buffer_pool_manager_->UnpinPage(new_page_id_dir));
-    assert(buffer_pool_manager_->UnpinPage(new_page_id_buc));
+    assert(buffer_pool_manager_->UnpinPage(new_page_id_dir, true));
+    assert(buffer_pool_manager_->UnpinPage(new_page_id_buc, true));
   }
   directory_lock_.unlock();
   
@@ -104,12 +104,12 @@ bool HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
   table_latch_.RLock();
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
-  Page *bucket_page = FetchBucketPage(bucket_page_id);
-  bucket_page->RLatch();
-  HASH_TABLE_BUCKET_TYPE *bucket = GetBucketPageData(bucket_page);
+  //Page *bucket_page = FetchBucketPage(bucket_page_id);
+  //bucket_page->RLatch();
+  HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);;
   // 读取数据
   bool ret = bucket->GetValue(key, comparator_, result);
-  bucket_page->RUnlatch(); 
+  //bucket_page->RUnlatch(); 
 
   assert(buffer_pool_manager_->UnpinPage(bucket_page_id, false));
   assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
@@ -126,25 +126,25 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   table_latch_.RLock();
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
-  Page *bucket_page = FetchBucketPage(bucket_page_id);
-  bucket_page->WLatch();
-  HASH_TABLE_BUCKET_TYPE *bucket = GetBucketPageData(bucket_page);
+  //Page *bucket_page = FetchBucketPage(bucket_page_id);
+  //bucket_page->WLatch();
+  HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
   // 如果bucket没满，直接插入即可
   if(!bucket->IsFull()) {
     bool ret = bucket->Insert(key, value, comparator_);
     bucket_page->WUnlatch();
     assert(buffer_pool_manager_->UnpinPage(bucket_page_id, true));
     assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
-    table_latch_.RUnLock();
+    table_latch_.RUnlock();
 
     return ret;
   }
 
-  bucket_page->WUnlatch();
+  //bucket_page->WUnlatch();
   assert(buffer_pool_manager_->UnpinPage(bucket_page_id, false));
   assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
 
-  table_latch_.RUnLock();
+  table_latch_..RUnlock();
   return SplitInsert(transaction, key, value);
 }
 
@@ -183,7 +183,7 @@ bool HASH_TABLE_TYPE::SplitInsert(Transaction *transaction, const KeyType &key, 
   Page *image_bucket_page = buffer_pool_manager_->NewPage(&image_bucket_page_id);
   assert(image_bucket_page != nullptr);
   image_bucket_page->WLatch();
-  HASH_TABLE_BLOCK_TYPE *image_bucket = FetchBucketPage(image_bucket_page_id);
+  HASH_TABLE_BUCKET_TYPE *image_bucket = FetchBucketPage(image_bucket_page_id);
   uint32_t split_image_bucket_index = dir_page->GetSplitImageIndex(split_bucket_index);
   dir_page->SetLocalDepth(split_image_bucket_index, dir_page->GetLocalDepth(split_bucket_index));
   dir_page->SetBucketPageId(split_image_bucket_index, image_bucket_page_id);
@@ -195,9 +195,9 @@ bool HASH_TABLE_TYPE::SplitInsert(Transaction *transaction, const KeyType &key, 
     assert(target_bucket_index_page == split_bucket_page_id || target_bucket_index_page == image_bucket_page_id);
     // 这里根据新计算的hash结果决定插入那个bucket
     if (target_bucket_index_page == split_bucket_page_id) {
-      assert(split_bucket->insert(origin_array[i].first, origin_array[i].second, comparator_));
+      assert(split_bucket->Insert(origin_array[i].first, origin_array[i].second, comparator_));
     } else {
-      assert(image_bucket->insert(origin_array[i].first, origin_array[i].second, comparator_));
+      assert(image_bucket->Insert(origin_array[i].first, origin_array[i].second, comparator_));
     }
   }
   delete[] origin_array;
@@ -222,7 +222,7 @@ bool HASH_TABLE_TYPE::SplitInsert(Transaction *transaction, const KeyType &key, 
   }  
 
   // split_bucket_page->WUnlatch();
-  image_bucket_page->WUnLatch();
+  image_bucket_page->WUnlatch();
 
   // Unpin
   assert(buffer_pool_manager_->UnpinPage(split_bucket_page_id, true));
@@ -242,13 +242,13 @@ bool HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   table_latch_.RLock();
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
-  uint32_t bucket_index = KeyToDirectoryIndex(key, dir_page);
+  //uint32_t bucket_index = KeyToDirectoryIndex(key, dir_page);
 
   //bucket_page->WLatch();
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
 
   // 删除Key-value
-  bucket->Remove(key, value, comparator_);
+  bool ret = bucket->Remove(key, value, comparator_);
 
   // 为空则合并
   if(bucket->IsEmpty()) {
@@ -265,7 +265,7 @@ bool HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   assert(buffer_pool_manager_->UnpinPage(bucket_page_id, true));
   assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
 
-  table_latch_.RUnLock();
+  table_latch_.RUnlock();
   return ret;
 }
 
@@ -317,7 +317,7 @@ void HASH_TABLE_TYPE::Merge(Transaction *transaction, const KeyType &key, const 
 
   //  遍历整个directory，将所有指向target bucket page的bucket全部重新指向split image bucket的page
   for(uint32_t i = 0; i < dir_page->Size(); i++) {
-    if(dir_page->GetBucketPageId(i) == target_bucket_page_id || dir_page->GetBucketPageId(i) == image_bucket_index) {
+    if(dir_page->GetBucketPageId(i) == target_bucket_page_id || dir_page->GetBucketPageId(i) == image_bucket_page_id) {
       dir_page->SetBucketPageId(i, image_bucket_index);
       dir_page->SetLocalDepth(i, dir_page->GetLocalDepth(target_bucket_index));
     }
