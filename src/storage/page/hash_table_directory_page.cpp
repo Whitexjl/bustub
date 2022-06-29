@@ -26,7 +26,19 @@ void HashTableDirectoryPage::SetLSN(lsn_t lsn) { lsn_ = lsn; }
 
 uint32_t HashTableDirectoryPage::GetGlobalDepth() { return global_depth_; }
 
+uint32_t GetSplitImageIndex(uint32_t bucket_idx) {
+  // Example: 当对应的localdepth是3时：
+  // 1<<(3-1) = 0000....00100
+  // 具体用途后面再说
+  return bucket_idx ^ (1 << (local_depths_[bucket_idx] - 1));
+}
+
 uint32_t HashTableDirectoryPage::GetGlobalDepthMask() { return (1 << global_depth_) - 1; }
+
+uint32_t GetLocalDepthMask(uint32_t bucket_idx) { 
+  uint8_t depth = local_depths_[bucket_idx];
+  return (1 << depth) - 1;
+}
 
 void HashTableDirectoryPage::IncrGlobalDepth() {
   assert(global_depth_ < MAX_BUCKET_DEPTH);
