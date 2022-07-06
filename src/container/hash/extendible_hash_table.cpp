@@ -107,7 +107,7 @@ bool HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
   //Page *bucket_page = FetchBucketPage(bucket_page_id);
   //bucket_page->RLatch();
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);;
-  // 读取数据
+  //读取数据
   bool ret = bucket->GetValue(key, comparator_, result);
   //bucket_page->RUnlatch(); 
 

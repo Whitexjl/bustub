@@ -34,24 +34,24 @@ bool HASH_TABLE_BUCKET_TYPE::GetValue(KeyType key, KeyComparator cmp, std::vecto
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
 bool HASH_TABLE_BUCKET_TYPE::Insert(KeyType key, ValueType value, KeyComparator cmp) {
-  int64_t isExist = -1;
+  int64_t is_exist = -1;
   for (size_t i = 0; i < BUCKET_ARRAY_SIZE; i++) {
     if (IsReadable(i)) {
       if(cmp(key, array_[i].first) == 0 && value == array_[i].second) {
         return false;
       }
-    } else if (isExist == -1) {
-      isExist = i;
+    } else if (is_exist == -1) {
+      is_exist = i;
     }
   }
 
-  if(isExist == -1) {
+  if(is_exist == -1) {
     return false;
   }
-
-  array_[isExist] = MappingType(key, value);
-  SetOccupied(isExist);
-  SetReadable(isExist);
+  //change?
+  array_[is_exist] = MappingType(key, value);
+  SetOccupied(is_exist);
+  SetReadable(is_exist);
   return true;
 }
 
