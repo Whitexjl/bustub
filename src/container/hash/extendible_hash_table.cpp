@@ -318,7 +318,7 @@ void HASH_TABLE_TYPE::Merge(Transaction *transaction, const KeyType &key, const 
   //  遍历整个directory，将所有指向target bucket page的bucket全部重新指向split image bucket的page
   for(uint32_t i = 0; i < dir_page->Size(); i++) {
     if(dir_page->GetBucketPageId(i) == target_bucket_page_id || dir_page->GetBucketPageId(i) == image_bucket_page_id) {
-      dir_page->SetBucketPageId(i, image_bucket_index);
+      dir_page->SetBucketPageId(i, image_bucket_page_id);
       dir_page->SetLocalDepth(i, dir_page->GetLocalDepth(target_bucket_index));
     }
   }
