@@ -48,7 +48,6 @@ bool HASH_TABLE_BUCKET_TYPE::Insert(KeyType key, ValueType value, KeyComparator 
   if(is_exist == -1) {
     return false;
   }
-  //change?
   array_[is_exist] = MappingType(key, value);
   SetOccupied(is_exist);
   SetReadable(is_exist);
