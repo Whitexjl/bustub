@@ -130,6 +130,7 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   //bucket_page->WLatch();
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
   Page *bucket_page = reinterpret_cast<Page *> (bucket);
+  bucket_page->WLatch();
   // 如果bucket没满，直接插入即可
   if(!bucket->IsFull()) {
     bool ret = bucket->Insert(key, value, comparator_);
