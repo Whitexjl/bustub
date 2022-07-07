@@ -105,7 +105,7 @@ bool HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
-  Page *bucket_page = reinterpret_cast<Page *> (bucket);
+  Page *bucket_page = buffer_pool_manager_->FetchPage(bucket_page_id);
   bucket_page->RLatch();
   // 读取数据
   bool ret = bucket->GetValue(key, comparator_, result);
@@ -126,11 +126,11 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   table_latch_.RLock();
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
-  //Page *bucket_page = FetchBucketPage(bucket_page_id);
-  //bucket_page->WLatch();
-  HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
-  Page *bucket_page = reinterpret_cast<Page *> (bucket);
+  Page *bucket_page = buffer_pool_manager_->FetchPage(bucket_page_id);
   bucket_page->WLatch();
+  HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
+  //Page *bucket_page = reinterpret_cast<Page *> (bucket);
+  //bucket_page->WLatch();
   // 如果bucket没满，直接插入即可
   if(!bucket->IsFull()) {
     bool ret = bucket->Insert(key, value, comparator_);
@@ -245,6 +245,8 @@ bool HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
   //uint32_t bucket_index = KeyToDirectoryIndex(key, dir_page);
+  Page *bucket_page = buffer_pool_manager_->FetchPage(bucket_page_id);
+  bucket_page->WLatch();
 
   //bucket_page->WLatch();
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
@@ -262,7 +264,7 @@ bool HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
     Merge(transaction, key, value);
     return ret;
   }
-
+  bucket_page->WUnlatch();
   // Unpin
   assert(buffer_pool_manager_->UnpinPage(bucket_page_id, true));
   assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
