@@ -105,7 +105,7 @@ bool HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
   HashTableDirectoryPage *dir_page = FetchDirectoryPage();
   page_id_t bucket_page_id = KeyToPageId(key, dir_page);
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
-  Page *bucket_page = reinterpret_cast<Page *> bucket;
+  Page *bucket_page = reinterpret_cast<Page *> (bucket);
   bucket_page->RLatch();
   // 读取数据
   bool ret = bucket->GetValue(key, comparator_, result);
@@ -129,7 +129,7 @@ bool HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   //Page *bucket_page = FetchBucketPage(bucket_page_id);
   //bucket_page->WLatch();
   HASH_TABLE_BUCKET_TYPE *bucket = FetchBucketPage(bucket_page_id);
-  Page *bucket_page = reinterpret_cast<Page *> bucket;
+  Page *bucket_page = reinterpret_cast<Page *> (bucket);
   // 如果bucket没满，直接插入即可
   if(!bucket->IsFull()) {
     bool ret = bucket->Insert(key, value, comparator_);
