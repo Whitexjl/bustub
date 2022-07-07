@@ -257,7 +257,7 @@ bool HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   // 为空则合并
   if(bucket->IsEmpty()) {
     // Unpin
-    bucket_page->WUnLatch();
+    bucket_page->WUnlatch();
     assert(buffer_pool_manager_->UnpinPage(bucket_page_id, true));
     assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
 
@@ -306,14 +306,14 @@ void HASH_TABLE_TYPE::Merge(Transaction *transaction, const KeyType &key, const 
   target_bucket_page->RLatch();
 
   if(!target_bucket->IsEmpty()) {
-    target_bucket_page->RUnLatch();
+    target_bucket_page->RUnlatch();
     assert(buffer_pool_manager_->UnpinPage(target_bucket_page_id, false));
     assert(buffer_pool_manager_->UnpinPage(dir_page->GetPageId(), false));
     table_latch_.WUnlock();
     return;
   }
 
-  target_bucket_page->RUnLatch();
+  target_bucket_page->RUnlatch();
   // 删除target bucket，此时该bucket已经为空
   assert(buffer_pool_manager_->UnpinPage(target_bucket_page_id, false));
   assert(buffer_pool_manager_->DeletePage(target_bucket_page_id));
