@@ -70,7 +70,7 @@ bool HashTableDirectoryPage::CanShrink() {
 }
 
 uint32_t HashTableDirectoryPage::GetLocalDepth(uint32_t bucket_idx) { 
-  uint8_t depth = local_depths_[bucket_idx];
+  uint32_t depth = local_depths_[bucket_idx];
   return depth;
 }
 
