@@ -51,13 +51,16 @@ void LRUReplacer::Unpin(frame_id_t frame_id) {
     if (lru_hash_map_.count(frame_id) != 0) {
         return;
     }
-    if (lru_list_.size() == lru_list_max_size_) {
+    if (lru_list_.size() >= lru_list_max_size_) {
         return;
     }
     lru_list_.push_front(frame_id);
     lru_hash_map_.emplace(frame_id, lru_list_.begin());
 }
 
-size_t LRUReplacer::Size() { return lru_list_.size(); }
+size_t LRUReplacer::Size() { 
+    std::scoped_lock lock{mutex_}; 
+    return lru_list_.size(); 
+}
 
 }  // namespace bustub

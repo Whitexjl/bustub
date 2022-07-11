@@ -33,7 +33,7 @@ uint32_t HashTableDirectoryPage::GetSplitImageIndex(uint32_t bucket_idx) {
   return bucket_idx ^ (1 << (local_depths_[bucket_idx] - 1));
 }
 
-uint32_t HashTableDirectoryPage::GetGlobalDepthMask() { return (1 << global_depth_) - 1; }
+uint32_t HashTableDirectoryPage::GetGlobalDepthMask() { return ((1 << global_depth_) - 1); }
 
 uint32_t HashTableDirectoryPage::GetLocalDepthMask(uint32_t bucket_idx) { 
   uint8_t depth = local_depths_[bucket_idx];

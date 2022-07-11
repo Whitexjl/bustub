@@ -59,10 +59,10 @@ bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
   Page *page_tmp = &pages_[frame_id_tmp];
 
   if (page_tmp->IsDirty()) {
-    disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
-    page_tmp->is_dirty_ = false;
+    disk_manager_->WritePage(page_id, page_tmp->GetData());
   }
 
+  page_tmp->is_dirty_ = false;
   return true;
 }
 
@@ -102,12 +102,12 @@ Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
   Page *page_tmp = &pages_[frame_id_tmp];
   // 脏页回写磁盘
   if (page_tmp->IsDirty()) {
-    disk_manager_->WritePage(page_tmp->page_id_, page_tmp->data_);
+    disk_manager_->WritePage(page_tmp->GetPageId(), page_tmp->GetData());
     page_tmp->is_dirty_ = false;
   }
 
   // 更新页表
-  page_table_.erase(page_tmp->page_id_);
+  page_table_.erase(page_tmp->GetPageId());
   page_table_.emplace(new_page_id, frame_id_tmp);
 
   // 页数据更新
@@ -167,8 +167,8 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
     page_tmp->is_dirty_ = false;
     page_tmp->page_id_ = page_id;  // 页号更新
     page_tmp->pin_count_++;
-    page_tmp->ResetMemory();  // 擦除换出页数据
-    disk_manager_->ReadPage(page_tmp->page_id_, page_tmp->data_);  // 把磁盘page_id的内容读取到被换出的缓冲区frame
+    // page_tmp->ResetMemory();  // 擦除换出页数据
+    disk_manager_->ReadPage(page_id, page_tmp->GetData());  // 把磁盘page_id的内容读取到被换出的缓冲区frame
     replacer_->Pin(frame_id_tmp);
   }
   return page_tmp;
@@ -191,7 +191,7 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
   frame_id_t frame_id_tmp = page_table_[page_id];
   Page *page_tmp = &pages_[frame_id_tmp];
   // 当前已经没有线程在占用此缓冲区页
-  if (page_tmp->pin_count_ > 0) {
+  if (page_tmp->GetPinCount() > 0) {
     return false;
   }
 
@@ -220,11 +220,11 @@ bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) {
   if (is_dirty) {
     page_tmp->is_dirty_ = true;
   }
-  if (page_tmp->pin_count_ == 0) {
+  if (page_tmp->pin_count_ <= 0) {
     return false;
   }
   page_tmp->pin_count_--;
-  if (page_tmp->pin_count_ == 0) {
+  if (page_tmp->pin_count_ <= 0) {
     replacer_->Unpin(frame_id_tmp);
   }
   return true;
