@@ -59,7 +59,7 @@ void LRUReplacer::Unpin(frame_id_t frame_id) {
 }
 
 size_t LRUReplacer::Size() { 
-    std::scoped_lock lock{mutex_}; 
+    std::scoped_lock lock{mtx_}; 
     return lru_list_.size(); 
 }
 
